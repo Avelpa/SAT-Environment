@@ -10,7 +10,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.model.Polygon;
+import java.awt.AWTException;
+import java.awt.MouseInfo;
+import java.awt.Robot;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,18 +29,26 @@ public class World {
     Vector2 mousePos = null;
     Polygon movedPoly = null;
     
-    private float frictionNormal = 0.95f;
+    private float frictionNormal   = 0.95f;
     private float frictionContact = 0.4f;
     
     public ArrayList<Vector2> potentialPolygon = new ArrayList();
     
+    Robot robot;
+    
     public World()
     {
         polygons = new ArrayList();
+        try {
+            robot = new Robot();
+        } catch (AWTException ex) {
+            Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public void update()
     {
+        System.out.println(potentialPolygon.size());
         float speed = 5;
 //        if (Gdx.input.isKeyPressed(Input.Keys.S))
 //        {
@@ -60,7 +73,7 @@ public class World {
             {
                 Vector2 movement = mousePos.cpy().sub(lastMousePos);
                 lastMousePos = mousePos;
-                
+
                 movedPoly = collidePoint(mousePos);
                 if (movedPoly != null)
                     movedPoly.setVelocity(movement.x, movement.y);
@@ -69,18 +82,21 @@ public class World {
             {
                 mousePressed = true;
                 lastMousePos = mousePos;
+            }      
+        }
+        else if (Gdx.input.isButtonPressed(1))
+        {
+            if (!mousePressed)
+            {
+                mousePos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight()-Gdx.input.getY());
+                potentialPolygon.add(mousePos);
+                mousePressed = true;
             }
         }
         else
         {
             mousePressed = false;
             movedPoly = null;
-        }
-        
-        if (Gdx.input.isButtonPressed(1))
-        {
-            mousePos = new Vector2(Gdx.input.getX(), Gdx.graphics.getHeight()-Gdx.input.getY());
-            potentialPolygon.add(mousePos);
         }
         
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
@@ -161,6 +177,9 @@ public class World {
     {
         ArrayList<Polygon> collidedPolygons = new ArrayList();
         
+        float minIntersect = Float.MAX_VALUE;
+        Vector2 collidingAxis = null;
+        
         Vector2[] normals1;
         Vector2[] normals2;
         
@@ -188,6 +207,7 @@ public class World {
                     proj1 = polygons.get(i).project(normal);
                     proj2 = polygons.get(j).project(normal);
                     
+                    // no collision
                     if (proj1.x > proj2.y || proj1.y < proj2.x)
                     {
                         collidedSecond = false;
@@ -195,9 +215,18 @@ public class World {
                             polygons.get(j).setFriction(frictionNormal);
                         break;
                     }
+                    else
+                    {
+//                        System.out.println(proj2.y-proj1.x);
+                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+                        {
+                            minIntersect = proj2.y-proj1.x;
+                            collidingAxis = normal;
+                        }
+                    }
                 }
-                if (!collidedSecond)
-                    continue;
+//                if (!collidedSecond)
+//                    continue;
                 
                 for (Vector2 normal: normals2)
                 {
@@ -210,6 +239,15 @@ public class World {
                         if (!collidedPolygons.contains(polygons.get(j)))
                             polygons.get(j).setFriction(frictionNormal);
                         break;
+                    }
+                    else
+                    {
+//                        System.out.println(proj2.y-proj1.x);
+                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+                        {
+                            minIntersect = proj2.y-proj1.x;
+                            collidingAxis = normal;
+                        }
                     }
                 }
                 
@@ -232,6 +270,29 @@ public class World {
                 }
             }
         }
+        if (collidedPolygons.size() > 0)
+        {
+            System.out.println(minIntersect);
+            System.out.println(collidingAxis);
+            
+//            collidedPolygons.get(1).setVelocity(-100, 0);
+            collidedPolygons.get(1).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(minIntersect/2));
+            collidedPolygons.get(1).move();
+            
+            collidedPolygons.get(0).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2));
+            collidedPolygons.get(0).move();
+            
+//            robot.mouseMove(Gdx.input.getX()-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2).x, Gdx.input.getY()-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2).y);
+//            robot.mouseMove(Gdx.input.getX(), Gdx.input.getY());
+//            collidedPolygons.get(1).bump(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(minIntersect));
+            
+//            robot.mouseMove(MouseInfo.getPointerInfo().getLocation().x-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect).x, MouseInfo.getPointerInfo().getLocation().y-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect).y);
+        }
+        if (minIntersect == 0)
+        {
+            collidedPolygons.clear();
+        }
+//        System.out.println(MouseInfo.getPointerInfo().getLocation());
         
         return collidedPolygons;
     }

@@ -30,6 +30,18 @@ public class Polygon {
     {
         velocity.set(diffX, diffY);
     }
+    public void setVelocity(Vector2 vel)
+    {
+        velocity = vel;
+    }
+    public void bump(Vector2 movement)
+    {
+        for(Vector2 vertex: vertices)
+        {
+            vertex.x += movement.x;
+            vertex.y += movement.y;
+        }
+    }
     
     public void setFriction(float newFriction)
     {
