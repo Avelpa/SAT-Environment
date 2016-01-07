@@ -30,7 +30,7 @@ public class World {
     Polygon movedPoly = null;
     
     private float frictionNormal   = 0.95f;
-    private float frictionContact = 0.4f;
+    private float frictionContact = 0.8f;
     
     public ArrayList<Vector2> potentialPolygon = new ArrayList();
     
@@ -48,7 +48,6 @@ public class World {
     
     public void update()
     {
-        System.out.println(potentialPolygon.size());
         float speed = 5;
 //        if (Gdx.input.isKeyPressed(Input.Keys.S))
 //        {
@@ -217,16 +216,29 @@ public class World {
                     }
                     else
                     {
-//                        System.out.println(proj2.y-proj1.x);
-                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+                        float intersect;
+                        if (Math.abs(proj2.y-proj1.x) < Math.abs(proj2.x-proj1.y))
                         {
-                            minIntersect = proj2.y-proj1.x;
+                            intersect = proj2.y-proj1.x;
+                        }
+                        else
+                        {
+                            intersect = proj2.x-proj1.y;
+                        }
+                        if (Math.abs(intersect) < Math.abs(minIntersect))
+                        {
+                            minIntersect = intersect;
                             collidingAxis = normal;
                         }
+//                        float intersect = Math.min(proj1.y, proj2.y) - Math.max(this.bounds.x, other.bounds.x);
+//                        System.out.println(proj2.y-proj1.x);
+//                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+//                        {
+//                            minIntersect = proj2.y-proj1.x;
+//                            collidingAxis = normal;
+//                        }
                     }
                 }
-//                if (!collidedSecond)
-//                    continue;
                 
                 for (Vector2 normal: normals2)
                 {
@@ -242,12 +254,27 @@ public class World {
                     }
                     else
                     {
-//                        System.out.println(proj2.y-proj1.x);
-                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+                        float intersect;
+                        if (Math.abs(proj2.y-proj1.x) < Math.abs(proj2.x-proj1.y))
                         {
-                            minIntersect = proj2.y-proj1.x;
+                            intersect = proj2.y-proj1.x;
+                        }
+                        else
+                        {
+                            intersect = proj2.x-proj1.y;
+                        }
+                        if (Math.abs(intersect) < Math.abs(minIntersect))
+                        {
+                            minIntersect = intersect;
                             collidingAxis = normal;
                         }
+                        
+////                        System.out.println(proj2.y-proj1.x);
+//                        if (Math.abs(proj2.y-proj1.x) < Math.abs(minIntersect))
+//                        {
+//                            minIntersect = proj2.y-proj1.x;
+//                            collidingAxis = normal;
+//                        }
                     }
                 }
                 
@@ -272,14 +299,20 @@ public class World {
         }
         if (collidedPolygons.size() > 0)
         {
+            
             System.out.println(minIntersect);
             System.out.println(collidingAxis);
             
 //            collidedPolygons.get(1).setVelocity(-100, 0);
-            collidedPolygons.get(1).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(minIntersect/2));
-            collidedPolygons.get(1).move();
+//            collidedPolygons.get(1).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(minIntersect/2));
+//            collidedPolygons.get(1).move();
+//            
+//            collidedPolygons.get(0).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2));
+//            collidedPolygons.get(0).move();
             
-            collidedPolygons.get(0).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2));
+            collidedPolygons.get(1).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(minIntersect/2f));
+            collidedPolygons.get(1).move();
+            collidedPolygons.get(0).setVelocity(collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2f));
             collidedPolygons.get(0).move();
             
 //            robot.mouseMove(Gdx.input.getX()-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2).x, Gdx.input.getY()-(int)collidingAxis.cpy().scl(1f/collidingAxis.len()).cpy().scl(-minIntersect/2).y);

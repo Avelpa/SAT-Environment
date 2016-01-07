@@ -32,7 +32,7 @@ public class Polygon {
     }
     public void setVelocity(Vector2 vel)
     {
-        velocity = vel;
+        this.velocity = vel;
     }
     public void bump(Vector2 movement)
     {
